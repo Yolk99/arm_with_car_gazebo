@@ -1,0 +1,23 @@
+<launch>
+ # The planning and execution components of MoveIt! configured to 
+ # publish the current configuration of the robot (simulated or real)
+ # and the current state of the world as seen by the planner
+ <include file="$(find jaka_moveit_config)/launch/move_group.launch">
+  <arg name="publish_monitored_planning_scene" value="true" />
+ </include>
+ # The visualization component of MoveIt!
+
+ <!-- ********************显示RVIZ******************** -->
+ <!-- include file="$(find jaka_moveit_config)/launch/moveit_rviz.launch"/-->
+
+ <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find slam_navigation)/rviz/rviz.rviz" />
+
+  <!-- We do not have a robot connected, so publish fake joint states -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="/use_gui" value="True"/> 
+    <rosparam param="/source_list">[/arm/joint_states]</rosparam>
+    <param name="rate" value="20.0"/>
+  </node>
+
+</launch>

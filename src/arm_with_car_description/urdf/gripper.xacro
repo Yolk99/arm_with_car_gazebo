@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Left gripper -->
+    <xacro:property name="left_gripper_len" value="0.08" />
+    <xacro:property name="left_gripper_width" value="0.01" />
+    <xacro:property name="left_gripper_height" value="0.01" />
+
+    <!-- Right gripper -->
+    <xacro:property name="right_gripper_len" value="0.08" />
+    <xacro:property name="right_gripper_width" value="0.01" />
+    <xacro:property name="right_gripper_height" value="0.01" />
+
+    <!-- Gripper frame -->
+    <xacro:property name="grasp_frame_radius" value="0.001" />
+
+    <xacro:macro name="gripper">
+        <!-- //////////////////////////////////////   gripper   ////////////////////////////////////////////// -->
+        <!-- LEFT GRIPPER AFT LINK -->
+        <joint name="finger_joint1" type="prismatic">
+            <parent link="tf_sensor_link"/>
+            <child link="gripper_finger_link1"/>
+            <origin xyz="0.0 0 0" />
+            <axis xyz="-1 0 0" />
+            <limit effort="100" lower="0" upper="0.07" velocity="1.0"/>
+            <dynamics damping="50" friction="1"/>
+        </joint>
+        
+        <link name="gripper_finger_link1">
+            <visual>
+                <origin xyz="0.04 -0.05 0" rpy="0.0 0.0 1.5708"/>
+                <geometry>
+                    <box size="${left_gripper_len} ${left_gripper_width} ${left_gripper_height}" />
+                </geometry>
+                <material name="white" />
+            </visual>
+            <xacro:inertial_matrix mass="1"/>
+        </link>
+
+
+
+        <!-- RIGHT GRIPPER AFT LINK -->
+        <joint name="finger_joint2" type="fixed">
+            <parent link="tf_sensor_link"/>
+            <child link="gripper_finger_link2"/>
+            <origin xyz="0.0 0 0" />
+        </joint>
+
+        <link name="gripper_finger_link2">
+            <visual>
+                <origin xyz="-0.04 -0.05 0" rpy="0.0 0.0 1.5708"/>
+                <geometry>
+                    <box size="${right_gripper_len} ${right_gripper_width} ${right_gripper_height}" />
+                </geometry>
+                <material name="white" />
+            </visual>
+            <xacro:inertial_matrix mass="1"/>
+        </link>
+
+        <!-- Grasping frame -->
+        <link name="grasping_frame"/>
+
+        <joint name="grasping_frame_joint" type="fixed">
+            <parent link="tf_sensor_link"/>
+            <child link="grasping_frame"/>
+            <origin xyz="0.08 0 0" rpy="0 0 0"/>
+        </joint>
+
+
+        <transmission name="tran1">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="finger_joint1">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="motor1">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+
+    </xacro:macro>
+</robot>

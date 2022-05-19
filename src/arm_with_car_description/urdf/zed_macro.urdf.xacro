@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+
+<!--
+Copyright (c) 2020, STEREOLABS.
+
+All rights reserved.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+	<xacro:include filename="$(find arm_with_car_description)/urdf/include/materials.urdf.xacro" />
+	<xacro:property name="M_PI"     value="3.1415926535897931" />
+
+	<!--
+		Parameters:
+		- name: the camera's name.  should match the parameter sent to the launch file for this camera
+		- model: the tye of camera, one of zed, zedm, zed2, zed2i
+		- parent: the parent link of the camera.  must be defined in the URDF file that uses this macro
+		- origin: the xyz/rpy offset from the parent link
+	-->
+	<xacro:macro name="zed_camera" params="name=zed model=zed parent *origin rate">
+		<xacro:if value="${model == 'zed'}">
+			<xacro:property name="baseline" value="0.12" />
+			<xacro:property name="height" value="0.03" />
+			<xacro:property name="bottom_slope" value="0.05" />
+			<xacro:property name="screw_offset_x" value="0.0" />
+			<xacro:property name="optical_offset_x" value="-0.01" />
+		</xacro:if>
+
+		<!-- Camera mounting point (the threaded screw hole in the bottom) -->
+		<link name="${name}_base_link" />
+
+		<joint name="${name}_base_joint" type="fixed">
+			<parent link="${parent}"/>
+			<child link="${name}_base_link"/>
+			<xacro:insert_block name="origin" />
+		</joint>
+
+
+		<!-- Camera Center -->
+		<link name="${name}_camera_center">
+			<visual>
+				<origin xyz="${screw_offset_x} 0 0" rpy="0 0 0"/>
+				<geometry>
+					<mesh filename="package://arm_with_car_description/mesh/${model}.stl" />
+				</geometry>
+				<material name="${model}_mat" />
+			</visual>
+
+			<collision>
+				<geometry>
+					<mesh filename="package://arm_with_car_description/mesh/${model}.stl" />
+				</geometry>
+			</collision>
+
+			<xacro:box_inertial_matrix m="0.05" l="0.1" w="0.02" h="0.02"/>
+		</link>
+
+		<joint name="${name}_camera_center_joint" type="fixed">
+			<parent link="${name}_base_link"/>
+			<child link="${name}_camera_center"/>
+			<origin xyz="0 0 ${height/2}" rpy="0 ${bottom_slope} 0" />
+		</joint>
+
+
+		<!-- Left Camera -->
+		<link name="${name}_left_camera_frame" />
+
+		<joint name="${name}_left_camera_joint" type="fixed">
+			<parent link="${name}_camera_center"/>
+			<child link="${name}_left_camera_frame"/>
+			<origin xyz="0 ${baseline/2} 0" rpy="0 0 0" />
+		</joint>
+
+		<link name="${name}_left_camera_optical_frame"/>
+
+		<joint name="${name}_left_camera_optical_joint" type="fixed">
+			<origin xyz="${optical_offset_x} 0 0" rpy="-${M_PI/2} 0.0 -${M_PI/2}"/>
+			<parent link="${name}_left_camera_frame"/>
+			<child link="${name}_left_camera_optical_frame"/>
+		</joint>
+
+
+		<!-- Right Camera -->
+		<link name="${name}_right_camera_frame" />
+
+		<joint name="${name}_right_camera_joint" type="fixed">
+			<parent link="${name}_camera_center"/>
+			<child link="${name}_right_camera_frame"/>
+			<origin xyz="0 -${baseline/2} 0" rpy="0 0 0" />
+		</joint>
+
+		<link name="${name}_right_camera_optical_frame"/>
+
+		<joint name="${name}_right_camera_optical_joint" type="fixed">
+			<origin xyz="${optical_offset_x} 0 0" rpy="-${M_PI/2} 0.0 -${M_PI/2}"/>
+			<parent link="${name}_right_camera_frame"/>
+			<child link="${name}_right_camera_optical_frame"/>
+		</joint>
+
+		
+
+		<!-- gazebo plugin -->
+
+		<gazebo reference="${name}_camera_center">
+            <material>Gazebo/Gray</material>
+        </gazebo>
+
+		<xacro:property name="deg_to_rad" value="0.01745329251994329577" />
+
+		<gazebo reference="${name}_camera_center">
+			<self_collide>0</self_collide>
+			<enable_wind>0</enable_wind>
+			<kinematic>0</kinematic>
+			<gravity>1</gravity>
+			<mu2>1</mu2>
+			<fdir1>0 0 0</fdir1>
+			<kp>1e+13</kp>
+			<kd>1</kd>
+
+			<sensor name="${name}_color" type="camera">
+				<camera name="${name}">
+					<horizontal_fov>${69.4*deg_to_rad}</horizontal_fov>
+					<image>
+						<width>640</width>
+						<height>480</height>
+						<format>RGB_INT8</format>
+					</image>
+					<clip>
+						<near>0.1</near>
+						<far>100</far>
+					</clip>
+					<noise>
+						<type>gaussian</type>
+						<mean>0.0</mean>
+						<stddev>0.007</stddev>
+					</noise>
+				</camera>
+				<always_on>1</always_on>
+				<update_rate>30</update_rate>
+				<visualize>1</visualize>
+			</sensor>
+
+			<sensor name="${name}_ired1" type="camera">
+				<camera name="${name}">
+					<horizontal_fov>${85.2*deg_to_rad}</horizontal_fov>
+					<image>
+						<width>1280</width>
+						<height>720</height>
+						<format>L_INT8</format>
+					</image>
+					<clip>
+						<near>0.1</near>
+						<far>100</far>
+					</clip>
+					<noise>
+						<type>gaussian</type>
+						<mean>0.0</mean>
+						<stddev>0.05</stddev>
+					</noise>
+				</camera>
+				<always_on>1</always_on>
+				<update_rate>90</update_rate>
+				<visualize>0</visualize>
+			</sensor>
+
+			<sensor name="${name}_ired2" type="camera">
+				<camera name="${name}">
+					<horizontal_fov>${85.2*deg_to_rad}</horizontal_fov>
+					<image>
+						<width>1280</width>
+						<height>720</height>
+						<format>L_INT8</format>
+					</image>
+					<clip>
+						<near>0.1</near>
+						<far>100</far>
+					</clip>
+					<noise>
+						<type>gaussian</type>
+						<mean>0.0</mean>
+						<stddev>0.05</stddev>
+					</noise>
+				</camera>
+				<always_on>1</always_on>
+				<update_rate>90</update_rate>
+				<visualize>0</visualize>
+			</sensor>
+
+			<sensor name="${name}_depth" type="depth">
+				<camera name="${name}">
+					<horizontal_fov>${85.2*deg_to_rad}</horizontal_fov>
+					<image>
+						<width>1280</width>
+						<height>720</height>
+					</image>
+					<clip>
+						<near>0.1</near>
+						<far>100</far>
+					</clip>
+					<noise>
+						<type>gaussian</type>
+						<mean>0.0</mean>
+						<stddev>0.100</stddev>
+					</noise>
+				</camera>
+				<always_on>1</always_on>
+				<update_rate>90</update_rate>
+				<visualize>0</visualize>
+			</sensor>
+		</gazebo>
+
+		<gazebo>
+			<plugin name="${name}" filename="librealsense_gazebo_plugin.so">
+				<prefix>${name}_</prefix>
+				<depthUpdateRate>${rate}</depthUpdateRate>
+				<colorUpdateRate>${rate}</colorUpdateRate>
+				<infraredUpdateRate>${rate}</infraredUpdateRate>
+				<depthTopicName>depth/image_raw</depthTopicName>
+				<depthCameraInfoTopicName>depth/camera_info</depthCameraInfoTopicName>
+				<colorTopicName>color/image_raw</colorTopicName>
+				<colorCameraInfoTopicName>color/camera_info</colorCameraInfoTopicName>
+				<infrared1TopicName>infra1/image_raw</infrared1TopicName>
+				<infrared1CameraInfoTopicName>infra1/camera_info</infrared1CameraInfoTopicName>
+				<infrared2TopicName>infra2/image_raw</infrared2TopicName>
+				<infrared2CameraInfoTopicName>infra2/camera_info</infrared2CameraInfoTopicName>
+				<colorOpticalframeName>${name}_right_camera_optical_frame</colorOpticalframeName>
+				<depthOpticalframeName>${name}_left_camera_optical_frame</depthOpticalframeName>
+				<infrared1OpticalframeName>${name}_infrared1_optical_frame</infrared1OpticalframeName>
+				<infrared2OpticalframeName>${name}_infrared2_optical_frame</infrared2OpticalframeName>
+				<rangeMinDepth>0.2</rangeMinDepth>
+				<rangeMaxDepth>10.0</rangeMaxDepth>
+				<pointCloud>false</pointCloud>
+				<pointCloudTopicName>depth/color/points</pointCloudTopicName>
+				<pointCloudCutoff>0.25</pointCloudCutoff>
+				<pointCloudCutoffMax>9.0</pointCloudCutoffMax>
+			</plugin>
+		</gazebo>
+
+	</xacro:macro>
+</robot>

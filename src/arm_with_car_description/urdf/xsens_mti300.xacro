@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="xsens_mti_300" params="*origin">
+        <link name="mti_300_link">
+            <visual>
+                <geometry>
+                    <mesh filename="package://arm_with_car_description/mesh/MTi_10.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+                <color rgba="0.92 0.45 0.02 1.0"/>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 ${M_PI/2}"/>
+            </visual>
+
+            <collision>
+                <geometry>
+                    <box size="0.057 0.0419 0.0236"/>
+                </geometry>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+            </collision>
+
+            <xacro:box_inertial_matrix m="0.055" l="0.057" w="0.0419" h="0.0236"/>
+
+        </link>
+    
+        <joint name="mti_300_joint" type="fixed">
+            <xacro:insert_block name="origin"/>
+            <parent link="base_link"/>
+            <child link="mti_300_link"/>
+        </joint>
+
+        <gazebo reference="mti_300_link">
+            <material>Gazebo/Orange</material>
+        </gazebo>
+
+        <gazebo reference="mti_300_link">
+            <gravity>true</gravity>
+            <sensor name="mti_300" type="imu">
+                <always_on>true</always_on>
+                <update_rate>20</update_rate>
+                <visualize>true</visualize>
+                <topic>imu</topic>
+                <plugin filename="libimu_plugin.so" name="imu_plugin">
+                    <topicName>imu</topicName>
+                    <bodyName>mti_300_link</bodyName>
+                    <updateRateHZ>20</updateRateHZ>
+                    <gaussianNoise>0.0</gaussianNoise>
+                    <xyzOffset>0 0 0</xyzOffset>
+                    <rpyOffset>0 0 0</rpyOffset>
+                    <frameName>base_footprint</frameName>
+                    <enableOrientation>true</enableOrientation>
+                    <initialOrientationAsReference>false</initialOrientationAsReference>
+                </plugin>
+            </sensor>
+        </gazebo>
+
+    
+    
+    </xacro:macro>
+    
+</robot>

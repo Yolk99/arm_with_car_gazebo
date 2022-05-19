@@ -1,0 +1,101 @@
+<?xml version="1.0" ?> 
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="arm">
+
+
+	<!-- PROPERTY LIST -->
+	<xacro:property name="M_PI" value="3.1415926535897931"/>
+  
+	<!-- Defining the colors used in this robot -->
+	<material name="blue">
+		<color rgba="0 0 0.8 1"/>
+	</material>
+	<material name="white">
+		<color rgba="1 1 1 1"/>
+	</material>
+	<material name="yellow">
+		<color rgba="1 0.4 0 1"/>
+	</material>
+	<material name="black">
+		<color rgba="0 0 0 0.95"/>
+	</material>
+	<material name="gray">
+		<color rgba="0.75 0.75 0.75 1"/>
+	</material>
+  
+	<!-- Macro for inertia matrix -->
+	<xacro:macro name="sphere_inertial_matrix" params="m r">
+		<inertial>
+			<mass value="${m}" />
+			<inertia ixx="${2*m*r*r/5}" ixy="0" ixz="0" iyy="${2*m*r*r/5}" iyz="0" izz="${2*m*r*r/5}" />
+		</inertial>
+	</xacro:macro>
+  
+	<xacro:macro name="cylinder_inertial_matrix" params="m r h">
+		<inertial>
+			<mass value="${m}" />
+			<inertia ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0" iyy="${m*(3*r*r+h*h)/12}" iyz = "0" izz="${m*r*r/2}" /> 
+		</inertial>
+	</xacro:macro>
+
+	<xacro:macro name="box_inertial_matrix" params="m l w h">
+		<inertial>
+            <mass value="${m}" />
+            <inertia ixx="${m*(h*h + l*l)/12}" ixy = "0" ixz = "0" iyy="${m*(w*w + l*l)/12}" iyz= "0" izz="${m*(w*w + h*h)/12}" />
+       </inertial>
+	</xacro:macro>
+	  
+	<xacro:macro name="inertial_matrix" params="mass">
+        <inertial>
+            <mass value="${mass}" />
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0" />
+        </inertial>
+    </xacro:macro>
+
+	<!-- description for car_base autolabor pro1 -->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/autolabor_pro1.xacro"/>
+	<xacro:autolabor_pro1/>
+
+	<!-- description for Lidar RS-16 -->
+	<xacro:arg name="gpu" default="false"/>
+	<xacro:property name="gpu" value="$(arg gpu)" />
+
+	<xacro:include filename="$(find arm_with_car_description)/urdf/RS-16.urdf.xacro"/>
+	<xacro:RS-16 parent="base_link" name="robosense" topic="/rs_points" hz="20" samples="900" gpu="${gpu}">
+		<origin xyz="0.4435 0.00 0.15" rpy="0 0 0" />
+	</xacro:RS-16>
+
+	<!-- description for IMU xsens mti-300 -->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/xsens_mti300.xacro"/>
+	<xacro:xsens_mti_300>
+		<origin xyz="0.4435 0.00 0.1" rpy="0 0 0" />
+	</xacro:xsens_mti_300>
+
+
+	<!-- description for Depth Camera ZED -->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/zed_macro.urdf.xacro" />
+	<xacro:zed_camera name="zed" model="zed" parent="base_link" rate="30">
+		<origin xyz="0.53 0 0.1" rpy="0 0 0 " />
+	</xacro:zed_camera>
+
+	<!-- description for arm jaka Zu7 -->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/jaka_Zu7.xacro"/>
+	<xacro:jaka_Zu7/>
+
+	<!-- description for force sensor -->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/tf_sensor.xacro"/>
+	<xacro:tf_sensor/>
+
+	<!-- description for gripper robotiq_85_gripper -->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/robotiq_85_gripper.xacro"/>
+	<xacro:robotiq_85_gripper prefix="" parent="tf_sensor_link" >
+        <origin xyz="0 -0.005 0" rpy="0 0 ${-M_PI/2}"/>
+    </xacro:robotiq_85_gripper>
+
+
+	<!-- description for Depth Camera intel D435-->
+	<xacro:include filename="$(find arm_with_car_description)/urdf/realsense_d435.xacro"/>
+	<xacro:realsense_d435 sensor_name="d435" parent_link="link6" rate="10">
+    	<origin rpy="0 0  ${-M_PI/2}" xyz="0 -0.04 0.05"/>
+  	</xacro:realsense_d435>
+
+</robot>

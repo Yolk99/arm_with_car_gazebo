@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="shaft_spacing_f" value="0.19649" />
+	<xacro:property name="shaft_spacing_b" value="0.18988" />
+	<xacro:property name="wheel_spacing_2" value="0.2643" />
+    <xacro:property name="height" value="0.11913" />
+
+    <!-- define a wheel -->
+    <xacro:macro name="wheel" params="suffix *origin direction">
+        <joint name="joint_${suffix}" type="continuous">
+            <xacro:insert_block name="origin" />
+            <axis xyz="0 0 ${direction}" />
+            <limit effort="100" velocity="100"/>
+            <safety_controller k_velocity="10" />
+            <parent link="base_link"/>
+            <child link="${suffix}_wheel"/>
+        </joint>
+
+        <link name="${suffix}_wheel">
+            <visual>
+                <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+                <geometry>
+                    <mesh filename="package://arm_with_car_description/mesh/wheel_color.dae"/>
+                </geometry>
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 1.5708"/>
+                <geometry>
+                    <cylinder length="0.0822" radius="0.127"/>
+                </geometry>
+                <!--geometry>
+                    <mesh filename="package://arm_with_car_description/mesh/wheel_color.dae"/>
+                </geometry-->
+            </collision>
+
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 ${M_PI}"/>
+                <mass value="1.5"/>
+                <inertia ixx="0.013" ixy="0.0" ixz="0.0" iyy="0.0074" iyz="0.0" izz="0.0074"/>
+            </inertial>
+        </link>
+    </xacro:macro>
+    
+
+
+    <xacro:macro name="autolabor_pro1">
+        <xacro:include filename="$(find arm_with_car_description)/urdf/autolabor_pro1.gazebo" />
+
+        <!-- Base Link -->
+        <link name="base_footprint">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.001 0.001 0.001" />
+                </geometry>
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0.18288" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.001 0.001 0.001" />
+                </geometry>
+            </collision>
+        </link>
+
+        <gazebo reference="base_footprint">
+            <turnGravityOff>false</turnGravityOff>
+        </gazebo>
+                
+        <joint name="base_footprint_joint" type="fixed">
+            <origin xyz="0 0 0.127" rpy="0 0 0" />        
+            <parent link="base_footprint"/>
+            <child link="base_link" />
+        </joint>
+
+        <link name="base_link">
+            <collision>
+                <origin xyz="0 0 0.18288" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.7248 0.4302 0.195"/>
+                </geometry>
+                <!--geometry>
+                    <mesh filename="package://autolabor_description/meshes/body_color.dae"/>
+                </geometry-->
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://arm_with_car_description/mesh/body_color.dae"/>
+                </geometry>
+            </visual>
+
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <mass value="39"/>
+                <inertia ixx="0.7245" ixy="0.0" ixz="0.0" iyy="1.80" iyz="0.0" izz="2.2857"/>
+            </inertial>
+        </link>
+
+        <xacro:wheel suffix="left_front"  direction="-1">
+            <origin xyz="${shaft_spacing_f} ${wheel_spacing_2} ${height}" rpy="${M_PI/2} 0 0 " />
+        </xacro:wheel>
+        <xacro:wheel suffix="left_back"  direction="-1">
+            <origin xyz="${-shaft_spacing_b} ${wheel_spacing_2} ${height}" rpy="${M_PI/2} 0 0 " />
+        </xacro:wheel>
+        <xacro:wheel suffix="right_front"  direction="1">
+            <origin xyz="${shaft_spacing_f} ${-wheel_spacing_2} ${height}" rpy="${-M_PI/2} 0 0 " />
+        </xacro:wheel>
+        <xacro:wheel suffix="right_back"  direction="1">
+            <origin xyz="${-shaft_spacing_b} ${-wheel_spacing_2} ${height}" rpy="${-M_PI/2} 0 0 " />
+        </xacro:wheel>
+
+
+
+    </xacro:macro>
+
+</robot>

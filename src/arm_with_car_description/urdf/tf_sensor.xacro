@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="tf_sensor">
+        <link name="tf_sensor_link">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.0375" length="0.01"/>
+                </geometry>
+                <origin xyz="0.0 0.0 0.0" rpy="1.5708 0.0 0.0"/>
+            </visual>
+
+            <collision>
+                <geometry>
+                    <cylinder radius="0.0375" length="0.01"/>
+                </geometry>
+                <origin xyz="0.0 0.0 0.0" rpy="1.5708 0.0 0.0"/>
+            </collision>
+
+            <inertial>
+                <mass value="0.01"/>
+                <inertia ixx="7.1441E-05" ixy="1.6499E-08" ixz="-4.9269E-09" iyy="7.146E-05" iyz="-8.5336E-09" izz="0.00013366"/>
+            </inertial>
+        </link>
+    
+        <joint name="tf_sensor_joint" type="fixed">
+            <origin xyz="0 -0.04 0" rpy="0.0 0.0 0.0"/>
+            <parent link="link6"/>
+            <child link="tf_sensor_link"/>
+        </joint>
+
+        <gazebo reference="tf_sensor_link">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+
+        <gazebo reference="tf_sensor_joint">
+            <provideFeedback>true</provideFeedback>
+            <disableFixedJointLumping>true</disableFixedJointLumping>
+        </gazebo>
+     
+        <!-- The ft_sensor plugin -->
+        <gazebo>
+            <plugin name="tf_sensor_link" filename="libgazebo_ros_ft_sensor.so">
+                <updateRate>100.0</updateRate>
+                <topicName>tf_sensor_topic</topicName>
+                <jointName>tf_sensor_joint</jointName>
+            </plugin>
+        </gazebo>
+    
+    </xacro:macro>
+    
+</robot>

@@ -1,0 +1,24 @@
+<!--xml version="1.0"-->
+<!--autolabor pro with cartographer 2D SLAM-->
+<launch>
+
+    <arg name="map" default="cloister_door_gmapping.yaml" />
+	<param name="use_sim_time" value="false" />
+
+    <!--autolabor_pro_description-->
+    <include file="$(find arm_with_car_gazebo)/launch/arm_bringup_moveit.launch" />
+
+
+    <!-- Run the map server with a lab map -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find slam_navigation)/maps/$(arg map)"/>
+
+	<!--move_base node-->
+	<include file="$(find slam_navigation)/launch/move_base_2.5.launch" />
+
+	<!--amcl-->
+    <include file = "$(find slam_navigation)/launch/auto_amcl.launch" />
+
+	<!--node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find slam_navigation)/rviz/amcl.rviz" /-->
+
+</launch>
